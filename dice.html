@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 3D cube dice styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #f3f4f6;
+        }
+
+        button { padding: 10px 18px; font-size:16px; cursor:pointer; }
+
+        .scene {
+            width: 260px;
+            height: 260px;
+            perspective: 1000px;
+            margin: 18px auto;
+        }
+
+        .cube {
+            width: 220px;
+            height: 220px;
+            position: relative;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(.2,.9,.2,1);
+        }
+
+        .face {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            left: 0; top: 0;
+            display:flex;align-items:center;justify-content:center;
+            background: #fff; border:2px solid #333; border-radius:12px;
+            font-size:28px; font-weight:700; color:#111;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        .face img{ width:100%; height:100%; object-fit:cover; display:block }
+
+        /* simple rolling animation */
+        @keyframes rollAnim {
+            0% { transform: rotateX(0deg) rotateY(0deg) scale(1); }
+            50% { transform: rotateX(180deg) rotateY(180deg) scale(1.04); }
+            100% { transform: rotateX(360deg) rotateY(360deg) scale(1); }
+        }
+
+        .rolling { animation: rollAnim 700ms ease-in-out; }
+
+        .face.front  { transform: translateZ(110px); }
+        .face.back   { transform: translateZ(-110px) rotateY(180deg); }
+        .face.right  { transform: translateX(110px) rotateY(90deg); }
+        .face.left   { transform: translateX(-110px) rotateY(-90deg); }
+        .face.top    { transform: translateY(-110px) rotateX(90deg); }
+        .face.bottom { transform: translateY(110px)  rotateX(-90deg); }
+
+        #result{ font-size:20px; font-weight:600; margin-top:10px; }
+    </style>
+</head>
+<body>
+    <h2>Dice Roller</h2>
+
+    <div class="scene">
+        <div class="cube" id="cube">
+            <div class="face top"><img src="inverted-dice-2.png" alt="1"></div>
+            <div class="face bottom"><img src="inverted-dice-5.png" alt="6"></div>
+            <div class="face front"><img src="inverted-dice-1.png" alt="2"></div>
+            <div class="face back"><img src="inverted-dice-6.png" alt="5"></div>
+            <div class="face left"><img src="inverted-dice-4.png" alt="4"></div>
+            <div class="face right"><img src="inverted-dice-3.png" alt="3"></div>
+        </div>
+    </div>
+    
+    <div id="result">Click Roll to throw the cube</div>
+
+    <button id="rollBtn">Roll Dice</button>
+    <button id="resetBtn">Reset</button>
+
+    <script>
+        const cube = document.getElementById('cube');
+        const rollBtn = document.getElementById('rollBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Map final rotations for face on TOP
+        const finalRotations = {
+            1: 'rotateX(0deg) rotateY(0deg)',      // top
+            2: 'rotateX(-90deg) rotateY(0deg)',    // front -> top
+            3: 'rotateX(0deg) rotateY(-90deg)',    // right -> top
+            4: 'rotateX(0deg) rotateY(90deg)',     // left -> top
+            5: 'rotateX(90deg) rotateY(0deg)',     // back -> top
+            6: 'rotateX(180deg) rotateY(0deg)'     // bottom -> top
+        };
+
+        function rollDice() {
+            rollBtn.disabled = true;
+            // random final face 1-6
+            const value = Math.floor(Math.random() * 6) +1;
+
+                // apply a simple rolling animation then snap to final face
+                cube.classList.remove('rolling');
+                // force reflow to restart animation
+                void cube.offsetWidth;
+                cube.classList.add('rolling');
+
+                setTimeout(() => {
+                    cube.classList.remove('rolling');
+                    // snap to exact orientation for the rolled value
+                    cube.style.transition = 'transform 400ms ease-out';
+                    cube.style.transform = finalRotations[value];
+                    document.getElementById('result').textContent = 'Result: ' + value;
+                }, 700);
+
+                // re-enable after animation completes
+                setTimeout(() => { rollBtn.disabled = false; }, 900);
+        }
+
+        rollBtn.addEventListener('click', rollDice);
+        resetBtn.addEventListener('click', () => {
+            cube.style.transition = 'transform 500ms ease';
+            cube.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            document.getElementById('result').textContent = 'Click Roll to throw the cube';
+        });
+    </script>
+</body>
+</html>
